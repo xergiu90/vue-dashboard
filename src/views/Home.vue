@@ -1,38 +1,55 @@
 <template>
   <div class="home">
-    <HomeComponent :data=data />
+    <TableComponent :data=data v-if="data.length"/>
+    <div class="no-data" v-else>
+      No data!
+    </div>
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
-import HomeComponent from '@/components/HomeComponent.vue';
+import TableComponent from '@/components/TableComponent.vue';
 import axios from "axios";
 
 export default {
   name: 'Home',
   components: {
-    HomeComponent
+    TableComponent
   },
   data() {
     return {
-      data: []
+      data: [],
+      time: 0
     }
   },
-  async mounted() {
+  created() {
     this.getData();
+    this.trackTime();
+  },
+  destroyed() {
+    this.$store.dispatch({
+      type: 'setTime',
+      data: {screen: 'home', time: this.time}
+    });
   },
   methods:{
-    getData: function (){
-      return axios
-          .get('interview-consultations.csv', {baseURL: window.location.origin}).then(response => {
-            this.data = this.getJsonData(response.data).filter(item => item.id);
+    getData: function () {
+      if(!this.$store.state.appointmentData.length) {
+        axios.get('interview-consultations.csv', {baseURL: window.location.origin}).then(response => {
+          this.$store.dispatch({
+            type: 'setConsultations',
+            data: this.getJsonData(response.data).filter(item => item.id)
+          });
 
-          })
-          .catch(error => {
-            console.log(error)
-          })
-          .finally(() => console.log(this.data));
+          this.data = this.$store.getters.consultations;
+        })
+            .catch(error => {
+              console.log(error)
+            })
+      }
+
+      this.data = this.$store.getters.consultations;
+
     },
     getJsonData: function (csv) {
       let rows = csv.split(/\r?\n/);
@@ -85,7 +102,7 @@ export default {
                 }
               }
               break;
-            case 7:{
+            case 7: {
               map['consultationDate'] = val;
               let dateAppointment = new Date(val);
               let date = new Date();
@@ -100,11 +117,29 @@ export default {
               break;
             }
           }
+          map['isEscalated'] = false;
+
           return map;
         }, {});
       });
+    },
+    trackTime() {
+      setInterval(() => {
+        this.time++;
+      }, 1000);
     }
   }
-
 }
 </script>
+<style scoped>
+.home {
+  height: 100%;
+}
+
+.no-data {
+  font-size: 40px;
+  width: 100%;
+  text-align: center;
+  padding: 20px;
+}
+</style>

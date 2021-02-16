@@ -13,8 +13,8 @@
         :pagination="pagination"
         @change="handleTableChange"
     >
-      <template slot="actions">
-        <a-button>Open Consultations</a-button>
+      <template slot="actions" slot-scope="text, record">
+        <a-button v-on:click='redirectConsultation(record)'>Open Consultations</a-button>
       </template>
     </a-table>
   </div>
@@ -190,6 +190,13 @@ export default {
         })
 
         return filtered;
+    },
+    redirectConsultation(data) {
+      this.$store.dispatch({
+        type: 'setConsultationData',
+        data: data
+      });
+      this.$router.push({ name: 'Consultation' })
     }
   }
 }

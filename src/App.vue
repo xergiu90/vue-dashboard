@@ -1,29 +1,40 @@
 <template>
   <div id="app">
-    <a-layout id="main-app">
-      <a-layout-sider>
-        <a-menu theme="dark" mode="inline" :default-selected-keys="['1']">
-          <a-menu-item  key="1">
-            <a-icon type="user" />
-            <span><router-link to="/">Initial consultation</router-link></span>
-          </a-menu-item>
-          <a-menu-item key="2">
-            <a-icon type="upload" />
-            <span><router-link to="/escalation">Escalations</router-link></span>
-          </a-menu-item>
-        </a-menu>
-      </a-layout-sider>
-      <a-layout>
-        <a-layout-content
-            :style="{ margin: '24px 16px', padding: '24px', background: '#fff', minHeight: '280px' }"
-        >
-          <router-view/>
-        </a-layout-content>
-      </a-layout>
-    </a-layout>
+    <router-view @authenticated="setAuthenticated"/>
   </div>
 </template>
-
+<script>
+export default {
+  name: 'App',
+  data() {
+    return {
+      authenticated: false,
+      mockAccount: {
+        username: "email",
+        password: "password"
+      },
+      timeout:null
+    }
+  },
+  created() {
+    this.refresh();
+    document.addEventListener('click', () => this.refresh());
+  },
+  methods: {
+    setAuthenticated(status) {
+      this.authenticated = status;
+    },
+    refresh () {
+      clearTimeout(this.timeout);
+      this.timeout = setTimeout(() => {
+        this.$store.dispatch({
+          type: 'logout'
+        });
+      }, 10 * 60 * 1000);
+    }
+  }
+}
+</script>
 <style>
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
